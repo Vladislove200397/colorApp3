@@ -6,71 +6,182 @@
 //
 
 import UIKit
-protocol MyColorViewControllerDelegate: AnyObject{
+protocol MyColorViewControllerDelegate: AnyObject {
     func update(color: UIColor)
 }
-class MyColorViewController: UIViewController{
+class MyColorViewController: UIViewController {
     
-    @IBOutlet var labelRed: UILabel!
-    @IBOutlet var labelGreen: UILabel!
-    @IBOutlet var labelBlue: UILabel!
+
+    @IBOutlet weak var labelRed: UILabel!
+    @IBOutlet weak var labelGreen: UILabel!
+    @IBOutlet weak var labelBlue: UILabel!
     
-    @IBOutlet var sliderRed: UISlider!
-    @IBOutlet var sliderGreen: UISlider!
-    @IBOutlet var sliderBlue: UISlider!
+    @IBOutlet weak var sliderRed: UISlider!
+    @IBOutlet weak var sliderGreen: UISlider!
+    @IBOutlet weak var sliderBlue: UISlider!
     
     
-    @IBOutlet var textFieldRed: UITextField!
-    @IBOutlet var textFieldGreen: UITextField!
-    @IBOutlet var textFieldBlue: UITextField!
-    weak var delegate: ViewControllerDelegate?
+    @IBOutlet weak var textFieldRed: UITextField!
+    @IBOutlet weak var textFieldGreen: UITextField!
+    @IBOutlet weak var textFieldBlue: UITextField!
+    
+    weak var delegate: MyColorViewControllerDelegate!
 
     @IBOutlet weak var mainView: UIView!
     
     
-    var mainViewColor = UIColor(red: 0/255,
-                                green: 0/255,
-                                blue: 0/255,
-                                alpha: 1)
+    var mainViewColor: UIColor!
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        sliderRed.minimumTrackTintColor = .red
-        sliderGreen.minimumTrackTintColor = .green
-        labelRed.text = "0"
-        labelBlue.text = "0"
-        labelGreen.text = "0"
+        
+
+
         mainView.backgroundColor = mainViewColor
         
+        setSliders()
+        setValue(for: textFieldRed, textFieldGreen, textFieldBlue)
+        setValue(for: labelRed, labelGreen, labelBlue)
+        addDoneButton(to: textFieldRed, textFieldGreen, textFieldBlue)
     }
     
-    @IBAction func sliderUpdate(_ sender: Any) {
+
+        
+    @IBAction func slidersUpdate(_ sender: UISlider) {
+        
+    switch sender.tag {
+        case 0:
+            setValue(for: labelRed)
+            setValue(for: textFieldRed)
+        case 1:
+            setValue(for: labelGreen)
+            setValue(for: textFieldGreen)
+        case 2:
+            setValue(for: labelBlue)
+            setValue(for: textFieldBlue)
+        default:
+            break
+        }
         updateViewColor()
-        updateLabelValue()
-        updateTextFieldsValue()
     }
-     func updateLabelValue() {
-        labelRed.text = String(Int(sliderRed.value))
-        labelBlue.text = String(Int(sliderBlue.value))
-        labelGreen.text = String(Int(sliderGreen.value))
+
+  @IBAction  func cahngeColor() {
+       delegate?.update(color: mainView.backgroundColor ?? .blue)
+       dismiss(animated: true)
+      }
+}
+
+extension MyColorViewController {
+    
+         private func setValue(for labels: UILabel...) {
+        labels.forEach { label in
+            switch label.tag {
+            case 0: labelRed.text = string(from: sliderRed)
+            case 1: labelGreen.text = string(from: sliderGreen)
+            case 2: labelBlue.text = string(from: sliderBlue)
+            default:break
+            }
+        }
+     }
+         private func setValue(for textFields: UITextField...) {
+             textFields.forEach { textField in
+             switch textField.tag {
+             case 0: textFieldRed.text = string(from: sliderRed)
+             case 1: textFieldGreen.text = string(from: sliderGreen)
+             case 2: textFieldBlue.text = string(from: sliderBlue)
+             default:break
+             }
+        }
     }
-    func updateTextFieldsValue(){
-        textFieldRed.text = String(Int(sliderRed.value))
-        textFieldBlue.text = String(Int(sliderBlue.value))
-        textFieldGreen.text = String(Int(sliderGreen.value))
-    }
-        func updateViewColor() {
+         private func setSliders() {
+            let ciColor = CIColor(color: mainViewColor)
             
-            mainViewColor = UIColor(red: CGFloat(sliderRed.value)/255,
-                                    green: CGFloat(sliderGreen.value)/255,
-                                    blue: CGFloat(sliderBlue.value)/255,
-                                    alpha: 1)
-            mainView.backgroundColor = mainViewColor
+            sliderRed.value = Float(ciColor.red)
+            sliderGreen.value = Float(ciColor.green)
+            sliderBlue.value = Float(ciColor.blue)
+            print(Float(ciColor.red),
+                  Float(ciColor.green),
+                  Float(ciColor.blue))
         }
     
-  
-    @IBAction func cahngeColor() {
-        delegate?.update(color: mainViewColor)
-        dismiss(animated: true)
+    private func string(from slider: UISlider) -> String {
+        return String(format: "%.2f", slider.value)
     }
     
+    func updateViewColor() {
+            
+        mainView.backgroundColor = UIColor(
+            red: CGFloat(sliderRed.value),
+            green: CGFloat(sliderGreen.value),
+            blue: CGFloat(sliderBlue.value),
+            alpha: 1)
+        }
+    
+    private func addDoneButton(to textFields: UITextField...) {
+            
+            textFields.forEach { textField in
+                let keyboardToolbar = UIToolbar()
+                textField.inputAccessoryView = keyboardToolbar
+                keyboardToolbar.sizeToFit()
+                
+                let doneButton = UIBarButtonItem(
+                    title:"Done",
+                    style: .done,
+                    target: self,
+                    action: #selector(didTapDone)
+                )
+                
+                let flexBarButton = UIBarButtonItem(
+                    barButtonSystemItem: .flexibleSpace,
+                    target: nil,
+                    action: nil
+                )
+                
+                keyboardToolbar.items = [flexBarButton, doneButton]
+            }
+        }
+        
+    @objc private func didTapDone() {
+            view.endEditing(true)
+        }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alert.addAction(okAction)
+        present(alert, animated: true)
+    }
+
 }
+
+extension MyColorViewController: UITextFieldDelegate {
+    
+   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        view.endEditing(true)
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        
+        guard let text = textField.text else { return }
+        
+        if let currentValue2 = Float(text), currentValue2  <= 1 {
+            switch textField.tag {
+            case 0: sliderRed.setValue(currentValue2, animated: true)
+                setValue(for: labelRed)
+            
+            case 1: sliderGreen.setValue(currentValue2, animated: true)
+                setValue(for: labelGreen)
+            
+             case 2: sliderBlue.setValue(currentValue2, animated: true)
+                setValue(for: labelBlue)
+            default: break
+            }
+            updateViewColor()
+            return
+           }
+        showAlert(title: "ok", message: "gg")
+      }
+   }
+

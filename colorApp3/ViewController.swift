@@ -6,10 +6,8 @@
 //
 
 import UIKit
-protocol ViewControllerDelegate: AnyObject{
-    func update(color: UIColor)
-}
-class ViewController: UIViewController,ViewControllerDelegate {
+
+class ViewController: UIViewController {
     
     var viewControllerColor: UIColor!
     
@@ -18,11 +16,12 @@ class ViewController: UIViewController,ViewControllerDelegate {
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard let destination = segue.destination as? MyColorViewController else { return }
+        let destination = segue.destination as! MyColorViewController
         destination.delegate = self
+        destination.mainViewColor = view.backgroundColor
     }
-    
-    
+}
+    extension ViewController: MyColorViewControllerDelegate {
     func update(color: UIColor) {
         view.backgroundColor = color
     }
